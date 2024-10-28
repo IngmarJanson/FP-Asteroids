@@ -1,15 +1,24 @@
 -- | This module defines how to turn
 --   the game state into a picture
+--asteroids
 module View where
 
 import Graphics.Gloss
 import Model
+class Animate a where 
+    animate :: a -> a 
 
-view :: GameState -> IO Picture
-view = return . viewPure
 
-viewPure :: GameState -> Picture
-viewPure gstate = case infoToShow gstate of
-  ShowNothing   -> blank
-  ShowANumber n -> color green (text (show n))
-  ShowAChar   c -> color green (text [c])
+class Draw a where
+    draw :: Picture -> a -> Picture
+
+instance Draw PlayerInfo where
+  draw pic (PlayerInfo (x, y) _ _) = translate x y pic
+
+
+view :: Picture -> GameState -> IO Picture
+view playerCircle gstate = return $ draw playerCircle (playerInfo gstate)
+
+
+
+

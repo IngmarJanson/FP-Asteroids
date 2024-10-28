@@ -3,29 +3,46 @@
 module Controller where
 
 import Model
+import Graphics.Gloss.Interface.Pure.Game as G
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
--- | Handle one iteration of the game
+-- create a function that updates the state of the game
+-- | Update the game state
 step :: Float -> GameState -> IO GameState
-step secs gstate
-  | elapsedTime gstate + secs > nO_SECS_BETWEEN_CYCLES
-  = -- We show a new random number
-    do randomNumber <- randomIO
-       let newNumber = abs randomNumber `mod` 10
-       return $ GameState (ShowANumber newNumber) 0
-  | otherwise
-  = -- Just update the elapsed time
-    return $ gstate { elapsedTime = elapsedTime gstate + secs }
+step secs gstate = return $ gstate { elapsedTime = elapsedTime gstate + secs }
 
--- | Handle user input
+-- create a function that handles user input
 input :: Event -> GameState -> IO GameState
-input e gstate = return (inputKey e gstate)
+input (EventKey (SpecialKey KeyUp) G.Down _ _) gstate = return $ gstate { playerInfo = movePlayer(playerInfo gstate) { isMoving = True } }
+input (EventKey (SpecialKey KeyUp) G.Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
+input (EventKey (SpecialKey KeyLeft) G.Down _ _) gstate = return $ gstate { playerInfo = rotatePlayerLeft(playerInfo gstate) { isMoving = True } }
+input (EventKey (SpecialKey KeyLeft) G.Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
+input (EventKey (SpecialKey KeyRight) G.Down _ _) gstate = return $ gstate { playerInfo = rotatePlayerRight(playerInfo gstate) { isMoving = True } }
+input (EventKey (SpecialKey KeyRight) G.Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
+input _ gstate = return gstate
 
-inputKey :: Event -> GameState -> GameState
-inputKey (EventKey (Char c) _ _ _) gstate
-  = -- If the user presses a character key, show that one
-    gstate { infoToShow = ShowAChar c }
-inputKey _ gstate = gstate -- Otherwise keep the same
+-- | Move the player
+movePlayer :: PlayerInfo -> PlayerInfo
+movePlayer (PlayerInfo (x, y) (vx, vy) _) = PlayerInfo (x + vx, y + vy) (vx, vy) True
+
+-- | Rotate the player
+rotatePlayerLeft :: PlayerInfo -> PlayerInfo
+rotatePlayerLeft (PlayerInfo (x, y) (vx, vy) _) = 
+  let angle = atan2 vy vx + pi / 18 -- rotate by 10 degrees (pi/18 radians)
+      speed = sqrt (vx * vx + vy * vy)
+      newVx = speed * cos angle
+      newVy = speed * sin angle
+  in PlayerInfo (x, y) (newVx, newVy) True
+
+-- | Rotate the player
+rotatePlayerRight :: PlayerInfo -> PlayerInfo
+rotatePlayerRight (PlayerInfo (x, y) (vx, vy) _) = 
+  let angle = atan2 vy vx - pi / 18 -- rotate by 10 degrees (pi/18 radians)
+      speed = sqrt (vx * vx + vy * vy)
+      newVx = speed * cos angle
+      newVy = speed * sin angle
+  in PlayerInfo (x, y) (newVx, newVy) True
+
