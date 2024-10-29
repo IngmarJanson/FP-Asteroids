@@ -9,40 +9,51 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
--- create a function that updates the state of the game
--- | Update the game state
 step :: Float -> GameState -> IO GameState
-step secs gstate = return $ gstate { elapsedTime = elapsedTime gstate + secs }
+step secs (GameState elapsedTime playerInfo) = return $ GameState (elapsedTime + secs) (updatePlayer playerInfo)
+  where
+    updatePlayer :: PlayerInfo -> PlayerInfo
+    updatePlayer (PlayerInfo (x, y) (vx, vy) True (False, False)) = movePlayer (PlayerInfo (x, y) (vx, vy) True (False, False))
+    updatePlayer (PlayerInfo (x, y) (vx, vy) True (True, False)) = movePlayer(rotatePlayerLeft (PlayerInfo (x, y) (vx, vy) True (True, False)))
+    updatePlayer (PlayerInfo (x, y) (vx, vy) True (False, True)) = movePlayer(rotatePlayerRight (PlayerInfo (x, y) (vx, vy) True (False, True)))
+    updatePlayer (PlayerInfo (x, y) (vx, vy) False (True, False)) = rotatePlayerLeft (PlayerInfo (x, y) (vx, vy) False (True, False))
+    updatePlayer (PlayerInfo (x, y) (vx, vy) False (False, True)) = rotatePlayerRight (PlayerInfo (x, y) (vx, vy) False (False, True))
+    updatePlayer p = p
 
--- create a function that handles user input
+
+
+
 input :: Event -> GameState -> IO GameState
-input (EventKey (SpecialKey KeyUp) G.Down _ _) gstate = return $ gstate { playerInfo = movePlayer(playerInfo gstate) { isMoving = True } }
-input (EventKey (SpecialKey KeyUp) G.Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
-input (EventKey (SpecialKey KeyLeft) G.Down _ _) gstate = return $ gstate { playerInfo = rotatePlayerLeft(playerInfo gstate) { isMoving = True } }
-input (EventKey (SpecialKey KeyLeft) G.Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
-input (EventKey (SpecialKey KeyRight) G.Down _ _) gstate = return $ gstate { playerInfo = rotatePlayerRight(playerInfo gstate) { isMoving = True } }
-input (EventKey (SpecialKey KeyRight) G.Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
+input (EventKey (SpecialKey KeyUp) Down _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = True } }
+input (EventKey (SpecialKey KeyUp) Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
+input (EventKey (SpecialKey KeyLeft) Down _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isTurning = (True, False) } }
+input (EventKey (SpecialKey KeyLeft) Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isTurning = (False, False) } }
+input (EventKey (SpecialKey KeyRight) Down _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isTurning = (False, True) } }
+input (EventKey (SpecialKey KeyRight) Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isTurning = (False, False) } }
 input _ gstate = return gstate
+
 
 -- | Move the player
 movePlayer :: PlayerInfo -> PlayerInfo
-movePlayer (PlayerInfo (x, y) (vx, vy) _) = PlayerInfo (x + vx, y + vy) (vx, vy) True
+movePlayer (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = PlayerInfo (x + (vx * 3), y + (vy * 3)) (vx, vy) isMoving isTurning
 
 -- | Rotate the player
 rotatePlayerLeft :: PlayerInfo -> PlayerInfo
-rotatePlayerLeft (PlayerInfo (x, y) (vx, vy) _) = 
+rotatePlayerLeft (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = 
   let angle = atan2 vy vx + pi / 18 -- rotate by 10 degrees (pi/18 radians)
       speed = sqrt (vx * vx + vy * vy)
       newVx = speed * cos angle
       newVy = speed * sin angle
-  in PlayerInfo (x, y) (newVx, newVy) True
+  in PlayerInfo (x, y) (newVx, newVy) isMoving isTurning
+rotatePlayerLeft p = p
 
 -- | Rotate the player
 rotatePlayerRight :: PlayerInfo -> PlayerInfo
-rotatePlayerRight (PlayerInfo (x, y) (vx, vy) _) = 
+rotatePlayerRight (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = 
   let angle = atan2 vy vx - pi / 18 -- rotate by 10 degrees (pi/18 radians)
       speed = sqrt (vx * vx + vy * vy)
       newVx = speed * cos angle
       newVy = speed * sin angle
-  in PlayerInfo (x, y) (newVx, newVy) True
+  in PlayerInfo (x, y) (newVx, newVy) isMoving isTurning
+rotatePlayerRight p = p
 
