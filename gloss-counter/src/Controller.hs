@@ -10,7 +10,7 @@ import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
 step :: Float -> GameState -> IO GameState
-step secs (GameState elapsedTime playerInfo) = return $ GameState (elapsedTime + secs) (updatePlayer playerInfo)
+step secs (GameState elapsedTime playerInfo asteroids) = return $ GameState (elapsedTime + secs) (updatePlayer playerInfo) (updateAsteroids asteroids)
   where
     updatePlayer :: PlayerInfo -> PlayerInfo
     updatePlayer (PlayerInfo (x, y) (vx, vy) True (False, False)) = movePlayer (PlayerInfo (x, y) (vx, vy) True (False, False))
@@ -20,6 +20,8 @@ step secs (GameState elapsedTime playerInfo) = return $ GameState (elapsedTime +
     updatePlayer (PlayerInfo (x, y) (vx, vy) False (False, True)) = rotatePlayerRight (PlayerInfo (x, y) (vx, vy) False (False, True))
     updatePlayer p = p
 
+    updateAsteroids :: [Asteroid] -> [Asteroid]
+    updateAsteroids a = a
 
 
 
@@ -35,25 +37,27 @@ input _ gstate = return gstate
 
 -- | Move the player
 movePlayer :: PlayerInfo -> PlayerInfo
-movePlayer (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = PlayerInfo (x + (vx * 3), y + (vy * 3)) (vx, vy) isMoving isTurning
+movePlayer (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = 
+  let newX = x + (vx * 3)
+      newY = y + (vy * 3)
+      (newX', newY') = if newX > 425 then (-425, newY) else if newX < -425 then (425, newY) else (newX, newY)
+      (newX'', newY'') = if newY > 325 then (newX', -325) else if newY < -325 then (newX', 325) else (newX', newY')
 
+  in PlayerInfo (newX'', newY'') (vx, vy) isMoving isTurning
 -- | Rotate the player
 rotatePlayerLeft :: PlayerInfo -> PlayerInfo
 rotatePlayerLeft (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = 
   let angle = atan2 vy vx + pi / 18 -- rotate by 10 degrees (pi/18 radians)
-      speed = sqrt (vx * vx + vy * vy)
-      newVx = speed * cos angle
-      newVy = speed * sin angle
+      newVx = cos angle
+      newVy = sin angle
   in PlayerInfo (x, y) (newVx, newVy) isMoving isTurning
-rotatePlayerLeft p = p
 
 -- | Rotate the player
 rotatePlayerRight :: PlayerInfo -> PlayerInfo
 rotatePlayerRight (PlayerInfo (x, y) (vx, vy) isMoving isTurning) = 
   let angle = atan2 vy vx - pi / 18 -- rotate by 10 degrees (pi/18 radians)
-      speed = sqrt (vx * vx + vy * vy)
-      newVx = speed * cos angle
-      newVy = speed * sin angle
+      newVx = cos angle
+      newVy = sin angle
   in PlayerInfo (x, y) (newVx, newVy) isMoving isTurning
-rotatePlayerRight p = p
+
 

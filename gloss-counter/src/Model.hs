@@ -5,12 +5,15 @@ module Model where
 type Left = Bool
 type Right = Bool
 
+data Variant = SmallAsteroid | MediumAsteroid | LargeAsteroid
+
 nO_SECS_BETWEEN_CYCLES :: Float
 nO_SECS_BETWEEN_CYCLES = 1
 
 data GameState = GameState {
                    elapsedTime :: Float
                   , playerInfo :: PlayerInfo
+                  , asteroids :: [Asteroid]
 }
 
 data PlayerInfo = PlayerInfo {
@@ -20,5 +23,12 @@ data PlayerInfo = PlayerInfo {
                   , isTurning :: (Left, Right)
 }
 
+data Asteroid = Asteroid {
+                   asteroidPosition :: (Float, Float)
+                  , asteroidDirection :: (Float, Float)
+                  , asteroidSpeed :: Float
+                  , asteroidVariant :: Variant
+}
+
 initialState :: GameState
-initialState = GameState 0 (PlayerInfo (0, 0) (0, 1) False (False, False))
+initialState = GameState 0 (PlayerInfo (0, 0) (0, 1) False (False, False)) []
