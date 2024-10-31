@@ -1,11 +1,15 @@
 -- | This module contains the data types
 --   which represent the state of the game
 module Model where
+import GHC.Integer (smallInteger)
 
 type Left = Bool
 type Right = Bool
 
-data Variant = SmallAsteroid | MediumAsteroid | LargeAsteroid
+data Variant = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid
+
+--Describing the hit box as a list of points
+type HitBox = [(Float, Float)]
 
 data Paused = IsPaused | IsNotPaused
     deriving (Show, Eq)
@@ -38,8 +42,9 @@ data Asteroid = Asteroid {
 data Bullet = Bullet {
                  bulletPosition :: (Float, Float)
                 , bulletDirection :: Float
+                , hit :: Bool
 }
 
 initialState :: GameState
-initialState = GameState 0 (PlayerInfo (0, 0) 90 False (False, False)) [Asteroid (100,100) 180 0 LargeAsteroid] [] IsNotPaused
+initialState = GameState 0 (PlayerInfo (0, 0) 90 False (False, False)) [Asteroid (100,100) 180 1 LargeAsteroid, Asteroid (50, 50) 90 2 SmallAsteroid] [] IsNotPaused
 

@@ -16,4 +16,7 @@ executable gloss-counter
   other-modules:       Controller
                      , Model
                      , View
+	                   , Collision
+		                 , Deletion
+                     
   default-language:    Haskell2010
