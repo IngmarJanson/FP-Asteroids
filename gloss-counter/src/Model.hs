@@ -8,6 +8,7 @@ type Right = Bool
 
 data Variant = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid
 
+data PlayerStatus = Alive | Dead
 --Describing the hit box as a list of points
 type HitBox = [(Float, Float)]
 
@@ -23,6 +24,8 @@ data GameState = GameState {
                   , asteroids :: [Asteroid]
                   , bullets :: [Bullet]
                   , pauseState :: Paused
+                  , seed :: Int
+                  , counter :: Int
 }
 
 data PlayerInfo = PlayerInfo {
@@ -30,6 +33,7 @@ data PlayerInfo = PlayerInfo {
                   , playerDirection :: Float
                   , isMoving :: Bool
                   , isTurning :: (Left, Right)
+                  , playerStatus :: PlayerStatus
 }
 
 data Asteroid = Asteroid {
@@ -45,6 +49,5 @@ data Bullet = Bullet {
                 , hit :: Bool
 }
 
-initialState :: GameState
-initialState = GameState 0 (PlayerInfo (0, 0) 90 False (False, False)) [Asteroid (100,100) 180 1 LargeAsteroid, Asteroid (50, 50) 90 2 SmallAsteroid] [] IsNotPaused
-
+initialState :: Int ->  GameState
+initialState n = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive) [Asteroid (100,100) 180 1 LargeAsteroid, Asteroid (50, 50) 90 2 SmallAsteroid] [] IsNotPaused n 0

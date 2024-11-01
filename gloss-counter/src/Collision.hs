@@ -15,7 +15,7 @@ instance CreateHitBox Asteroid where
     mkHitBox (Asteroid (x,y) _ _ LargeAsteroid) = [(x-60, y+60), (x+60, y-60)]
 --Makes hitbox for a player
 instance CreateHitBox PlayerInfo where
-    mkHitBox(PlayerInfo (x, y) _ _ _) = [(x+50/3,y+25),(x+50/3,y-25),(x-(100/3),y)]
+    mkHitBox(PlayerInfo (x, y) _ _ _ _) = [(x+50/3,y+25),(x+50/3,y-25),(x-(100/3),y)]
 
 bulletCollisions :: [Bullet] -> [Asteroid] -> [Bullet]
 bulletCollisions [] _ = []
@@ -91,5 +91,5 @@ doesTriangleIntersectSquare [(x1,y1), (x2,y2), (x3,y3)] square@[(x1Square,y1Squa
     in edgeIntersection || vertexInSquare || vertexInTriangle
 
 playerCollisions :: PlayerInfo -> [Asteroid] -> PlayerInfo
-playerCollisions p@(PlayerInfo pos _ _ _) as | any (doesTriangleIntersectSquare (mkHitBox p) . mkHitBox) as = PlayerInfo (0,0) 90 False (False, False)
-                                             | otherwise = p
+playerCollisions p@(PlayerInfo pos _ _ _ Alive) as  | any (doesTriangleIntersectSquare (mkHitBox p) . mkHitBox) as = PlayerInfo (0,0) 90 False (False, False) Dead
+                                                    | otherwise = p
