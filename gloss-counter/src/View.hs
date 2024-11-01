@@ -7,6 +7,8 @@ module View where
 import Graphics.Gloss
 import Model
 import Controller
+import Deletion
+import Collision (playerCollisions)
 
 class Animate a where
     animate :: a -> a
@@ -33,7 +35,7 @@ instance Draw Bullet where
 view :: Picture -> Picture -> Picture -> GameState -> Picture
 view playerCircle asteroidBlock bulletDot gs@(GameState _ playerInfo asteroids bullets _) = pictures 
   [
-    draw playerCircle playerInfo
+    draw playerCircle (playerCollisions playerInfo asteroids)
     , pictures $ map (draw asteroidBlock) (removeAsteroids asteroids)
     , pictures $ map (draw bulletDot) (removeBullets bullets)
     , showPauseScreen gs
