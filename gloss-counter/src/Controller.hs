@@ -13,14 +13,14 @@ import Collision
 
 step :: Float -> GameState -> IO GameState
 step secs gs@(GameState _ _ _ _ IsPaused _ _) = return gs
-step secs gs@(GameState _ (PlayerInfo _ _ _ _ Dead) _ _ _ _ _) = return gs
+step secs gs@(GameState _ (PlayerInfo _ _ _ _ Dead _) _ _ _ _ _) = return gs
 step secs (GameState elapsedTime playerInfo asteroids bullets IsNotPaused seed counter) = return $ GameState (elapsedTime + secs) (updatePlayer playerInfo) (updateAsteroids asteroids bullets) (updateBullets bullets asteroids) IsNotPaused seed (counter + 1)
   where
     updatePlayer :: PlayerInfo -> PlayerInfo
-    updatePlayer p = movePlayer $ rotatePlayer $ playerCollisions p asteroids
+    updatePlayer p = movePlayer $ rotatePlayer $ updateScore asteroids $ playerCollisions p asteroids
 
     updateAsteroids :: [Asteroid] -> [Bullet] -> [Asteroid]
-    updateAsteroids as bs = map moveAsteroid (createAsteroid position direction speed (deleteAsteroids (asteroidCollisions as bs)))
+    updateAsteroids as bs = map moveAsteroid $ setAlienDirection (playerPosition playerInfo) $ createAsteroid position direction speed $ deleteAsteroids $ asteroidCollisions as bs
       where
         position = createPosition seed
         direction = createDirection seed
@@ -45,19 +45,23 @@ input _ gstate = return gstate
 
 -- | Move the player
 movePlayer :: PlayerInfo -> PlayerInfo
-movePlayer (PlayerInfo (x, y) angle True isTurning status) =
+movePlayer (PlayerInfo (x, y) angle True isTurning status score) =
   let newX = x - (4 * cos (angle * (pi /180)))
       newY = y + (4 * sin (angle * (pi /180)))
       (newX', newY') = if newX > 425 then (-425, newY) else if newX < -425 then (425, newY) else (newX, newY)
       (newX'', newY'') = if newY > 325 then (newX', -325) else if newY < -325 then (newX', 325) else (newX', newY')
-  in PlayerInfo (newX'', newY'') angle True isTurning status
+  in PlayerInfo (newX'', newY'') angle True isTurning status score
 movePlayer p = p
 
 -- | Rotate the player
 rotatePlayer :: PlayerInfo -> PlayerInfo
-rotatePlayer (PlayerInfo (x, y) angle isMoving (True,False) status) = PlayerInfo (x, y) (angle - 6) isMoving (True,False) status
-rotatePlayer (PlayerInfo (x, y) angle isMoving (False,True) status) = PlayerInfo (x, y) (angle + 6) isMoving (False,True) status
+rotatePlayer (PlayerInfo (x, y) angle isMoving (True,False) status score) = PlayerInfo (x, y) (angle - 6) isMoving (True,False) status score
+rotatePlayer (PlayerInfo (x, y) angle isMoving (False,True) status score) = PlayerInfo (x, y) (angle + 6) isMoving (False,True) status score
 rotatePlayer p = p
+
+updateScore :: [Asteroid] -> PlayerInfo -> PlayerInfo
+updateScore [] p = p
+updateScore ((Asteroid _ _ _ _ plusScore):as) (PlayerInfo p angle m t s score) = updateScore as (PlayerInfo p angle m t s (score + plusScore))
 
 -- | Get starting position of bullet
 startingPositionBullet :: Bullet -> Bullet
@@ -69,17 +73,18 @@ moveBullet (Bullet (x, y) angle hit) = Bullet (x - (15 * cos (angle * (pi /180))
 
 -- | Move the asteroid
 moveAsteroid :: Asteroid -> Asteroid
-moveAsteroid (Asteroid (x, y) angle speed variant) = 
+moveAsteroid (Asteroid (x, y) angle speed variant score) =
   let newX = x - (speed * cos (angle * (pi /180)))
       newY = y + (speed * sin (angle * (pi /180)))
       (newX', newY') = if newX > 400 + variantNumber then (-400 - variantNumber, newY) else if newX < -400 - variantNumber then (400 + variantNumber, newY) else (newX, newY)
       (newX'', newY'') = if newY > 300 + variantNumber then (newX', -300 - variantNumber) else if newY < -300 - variantNumber then (newX', 300 - variantNumber) else (newX', newY')
-  in Asteroid (newX'', newY'') angle speed variant 
+  in Asteroid (newX'', newY'') angle speed variant score
     where
       variantNumber = case variant of
         SmallAsteroid -> 20
         MediumAsteroid -> 40
         LargeAsteroid -> 60
+        Alien -> 20
         Destroyed -> 0
 
 createPosition :: Int -> (Float, Float)
@@ -92,8 +97,13 @@ createDirection :: Int -> Float
 createDirection n = fst (randomR (0, 360) (mkStdGen n))
 
 createSpeed :: Int -> Float
-createSpeed n = fst (randomR (0, 10) (mkStdGen n))
+createSpeed n = fst (randomR (1, 2) (mkStdGen n))
 
 createAsteroid :: (Float, Float) -> Float -> Float -> [Asteroid] -> [Asteroid]
-createAsteroid pos d speed as   | length as < 8 = Asteroid pos d speed LargeAsteroid : as
+createAsteroid pos d speed as   | length as < 8 = Asteroid pos d speed Alien 0 : as
                                 | otherwise = as
+
+setAlienDirection :: (Float, Float) -> [Asteroid] -> [Asteroid]
+setAlienDirection _ [] = []
+setAlienDirection (x1, y1) ((Asteroid (x2, y2) d speed Alien s):as) = Asteroid (x2, y2) (((atan2 (x1 - x2) (y1 - y2) * 180) / pi) + 90) speed Alien s : setAlienDirection (x1, y1) as
+setAlienDirection p (a:as) = a : setAlienDirection p as

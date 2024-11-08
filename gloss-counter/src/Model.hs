@@ -6,7 +6,8 @@ import GHC.Integer (smallInteger)
 type Left = Bool
 type Right = Bool
 
-data Variant = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid
+data Variant = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid | Alien
+    deriving (Eq)
 
 data PlayerStatus = Alive | Dead
 --Describing the hit box as a list of points
@@ -34,6 +35,7 @@ data PlayerInfo = PlayerInfo {
                   , isMoving :: Bool
                   , isTurning :: (Left, Right)
                   , playerStatus :: PlayerStatus
+                  , playerScore :: Int
 }
 
 data Asteroid = Asteroid {
@@ -41,6 +43,7 @@ data Asteroid = Asteroid {
                   , asteroidDirection :: Float
                   , asteroidSpeed :: Float
                   , asteroidVariant :: Variant
+                  , asteroidScoreToGive :: Int
 }
 
 data Bullet = Bullet {
@@ -50,4 +53,4 @@ data Bullet = Bullet {
 }
 
 initialState :: Int ->  GameState
-initialState n = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive) [Asteroid (100,100) 180 1 LargeAsteroid, Asteroid (50, 50) 90 2 SmallAsteroid] [] IsNotPaused n 0
+initialState n = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive 0) [Asteroid (100,100) 0 2 LargeAsteroid 0, Asteroid (400, 400) 0 1 Alien 0] [] IsNotPaused n 0

@@ -17,7 +17,7 @@ deleteAsteroids [] = []
 deleteAsteroids (a:as) | isDestroyed a = deleteAsteroids as
                        | otherwise = a : deleteAsteroids as
   where
-    isDestroyed (Asteroid _ _ _ Destroyed) = True
+    isDestroyed (Asteroid _ _ _ Destroyed 0) = True
     isDestroyed _                          = False       
 
 removeBullets :: [Bullet] -> [Bullet]
