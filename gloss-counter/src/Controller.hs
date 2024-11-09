@@ -8,6 +8,8 @@ import Graphics.Gloss.Interface.Pure.Game as G
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
+
+import System.Directory
 import Data.List
 import Deletion
 import Collision
@@ -65,7 +67,8 @@ input (EventKey (Char 'r') Down _ _) gs@(GameState _ player@(PlayerInfo _ _ _ _ 
 
 -- right enter key to save game and update highscores
 input (EventKey (SpecialKey KeyEnter) Down _ _) gs@(GameState _ player@(PlayerInfo _ _ _ _ dead _ _) _ _ _ _ _ scores) = do
-  writeFile "highscores.txt" (updateHighScores scores player)
+  writeFile "NewScores.txt" (updateHighScores scores player)
+  renameFile "NewScores.txt" "HighScores.txt"
   return gs
 
 input _ gstate = return gstate
