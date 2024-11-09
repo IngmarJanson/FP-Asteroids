@@ -7,7 +7,10 @@ type Left = Bool
 type Right = Bool
 
 data Variant = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid | Alien
-    deriving (Eq)
+    deriving (Eq, Enum, Bounded)
+
+--Describing the highscores
+type ScoreList = [[String]] 
 
 data PlayerStatus = Alive | Dead
 --Describing the hit box as a list of points
@@ -27,6 +30,7 @@ data GameState = GameState {
                   , pauseState :: Paused
                   , seed :: Int
                   , counter :: Int
+                  , highScores :: ScoreList
 }
 
 data PlayerInfo = PlayerInfo {
@@ -36,6 +40,7 @@ data PlayerInfo = PlayerInfo {
                   , isTurning :: (Left, Right)
                   , playerStatus :: PlayerStatus
                   , playerScore :: Int
+                  , playerName :: String
 }
 
 data Asteroid = Asteroid {
@@ -52,5 +57,5 @@ data Bullet = Bullet {
                 , hit :: Bool
 }
 
-initialState :: Int ->  GameState
-initialState n = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive 0) [Asteroid (100,100) 0 2 LargeAsteroid 0, Asteroid (400, 400) 0 1 Alien 0] [] IsNotPaused n 0
+initialState :: Int -> ScoreList -> GameState
+initialState n scores = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive 0 "") [] [] IsNotPaused n 0 scores

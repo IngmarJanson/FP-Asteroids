@@ -15,14 +15,14 @@ class Animate a where
     animate :: a -> a
 
 instance Animate PlayerInfo where
-  animate (PlayerInfo (x, y) angle True _ _ score) = PlayerInfo (x, y) angle True (False, False) Alive score
+  animate (PlayerInfo (x, y) angle True _ _ score name) = PlayerInfo (x, y) angle True (False, False) Alive score name
   animate p = p
 
 class Draw a where
     draw :: Picture -> a -> Picture
 
 instance Draw PlayerInfo where
-  draw pic (PlayerInfo (x, y) angle _ _ _ _) = translate x y $ rotate angle pic
+  draw pic (PlayerInfo (x, y) angle _ _ _ _ _) = translate x y $ rotate angle pic
 
 instance Draw Asteroid where
   draw :: Picture -> Asteroid -> Picture
@@ -35,11 +35,12 @@ instance Draw Asteroid where
 instance Draw Bullet where
   draw pic (Bullet (x, y) _ _) = translate x y pic
 
-view :: Picture -> Picture -> Picture -> Picture -> GameState -> Picture
-view playerCircle asteroidBlock alienBlock bulletDot gs@(GameState _ playerInfo asteroids bullets _ _ _) = pictures 
+view :: Picture -> Picture -> Picture -> Picture -> Picture -> GameState -> Picture
+view background playerCircle asteroidBlock alienBlock bulletDot gs@(GameState _ playerInfo asteroids bullets _ _ _ _) = pictures 
   [
-    showInfo gs
-    , draw playerCircle (playerInfo)
+    background
+    , showInfo gs
+    , draw playerCircle playerInfo
     , pictures $ map (\a@(Asteroid _ _ _ v _) -> if v == Alien then draw alienBlock a else draw asteroidBlock a) asteroids
     , pictures $ map (draw bulletDot) (removeBullets bullets)
     , showPauseScreen gs
@@ -47,7 +48,7 @@ view playerCircle asteroidBlock alienBlock bulletDot gs@(GameState _ playerInfo 
   ]
 
 showInfo :: GameState -> Picture
-showInfo (GameState time player _ _ _ _ _) = Pictures
+showInfo (GameState time player _ _ _ _ _ _) = Pictures
   [
     translate (-390) 280 $ scale 0.1 0.1 $ color white $ text ("Score: " ++ show (playerScore player))
     , translate (-390) 240 $ scale 0.1 0.1 $ color white $ text ("Time: " ++ show (truncate time))
@@ -60,9 +61,9 @@ gameOverScreen :: Picture
 gameOverScreen  = pictures [color white $ translate (-100) 0 $ scale 0.3 0.3 $ text "Game Over", color white $ translate (-100) (-50) $ scale 0.1 0.1 $ text "Press 'r' to restart"]
 
 showGameOverScreen :: GameState -> Picture
-showGameOverScreen (GameState _ (PlayerInfo _ _ _ _ Dead _)  _ _ _ _ _) = gameOverScreen
+showGameOverScreen (GameState _ (PlayerInfo _ _ _ _ Dead _ _)  _ _ _ _ _ _) = gameOverScreen
 showGameOverScreen _ = blank
 
 showPauseScreen :: GameState -> Picture
-showPauseScreen (GameState _ _ _ _ IsPaused _ _) = pauseScreen
+showPauseScreen (GameState _ _ _ _ IsPaused _ _ _) = pauseScreen
 showPauseScreen _ = blank

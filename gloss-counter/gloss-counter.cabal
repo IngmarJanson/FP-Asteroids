@@ -18,5 +18,6 @@ executable gloss-counter
                      , View
 	                   , Collision
 		                 , Deletion
+                     , Score
                      
   default-language:    Haskell2010
