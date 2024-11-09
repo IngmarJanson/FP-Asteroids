@@ -17,8 +17,8 @@ deleteAsteroids [] = []
 deleteAsteroids (a:as) | isDestroyed a = deleteAsteroids as
                        | otherwise = a : deleteAsteroids as
   where
-    isDestroyed (Asteroid _ _ _ Destroyed 0) = True
-    isDestroyed _                          = False       
+    isDestroyed (Asteroid _ _ _ Destroyed 0 8) = True
+    isDestroyed _                              = False       
 
 removeBullets :: [Bullet] -> [Bullet]
 removeBullets = filter (\(Bullet (x, y) _ _) -> x > -425 && x < 425 && y > -325 && y < 325)

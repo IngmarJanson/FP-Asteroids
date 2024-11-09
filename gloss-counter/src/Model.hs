@@ -10,13 +10,13 @@ data Variant = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid | Alie
     deriving (Eq, Enum, Bounded)
 
 --Describing the highscores
-type ScoreList = [[String]] 
+type ScoreList = [[String]]
 
 data PlayerStatus = Alive | Dead
 --Describing the hit box as a list of points
 type HitBox = [(Float, Float)]
 
-data Paused = IsPaused | IsNotPaused
+data PlayingState = NotStarted | Playing | Paused | GameOver | SavingScore | HighScores
     deriving (Show, Eq)
 
 nO_SECS_BETWEEN_CYCLES :: Float
@@ -27,7 +27,7 @@ data GameState = GameState {
                   , playerInfo :: PlayerInfo
                   , asteroids :: [Asteroid]
                   , bullets :: [Bullet]
-                  , pauseState :: Paused
+                  , playingState :: PlayingState
                   , seed :: Int
                   , counter :: Int
                   , highScores :: ScoreList
@@ -49,6 +49,7 @@ data Asteroid = Asteroid {
                   , asteroidSpeed :: Float
                   , asteroidVariant :: Variant
                   , asteroidScoreToGive :: Int
+                  , frameCounter :: Int
 }
 
 data Bullet = Bullet {
@@ -58,4 +59,4 @@ data Bullet = Bullet {
 }
 
 initialState :: Int -> ScoreList -> GameState
-initialState n scores = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive 0 "") [] [] IsNotPaused n 0 scores
+initialState n = GameState 0 (PlayerInfo (0, 0) 90 False (False, False) Alive 0 "") [] [] NotStarted n 0

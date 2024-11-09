@@ -10,11 +10,11 @@ class CreateHitBox a where
 
 --Makes hitbox for an enemy
 instance CreateHitBox Asteroid where
-    mkHitBox (Asteroid (x,y) _ _ SmallAsteroid _) = [(x-20, y+20), (x+20, y-20)]
-    mkHitBox (Asteroid (x,y) _ _ MediumAsteroid _) = [(x-40, y+40), (x+40, y-40)]
-    mkHitBox (Asteroid (x,y) _ _ LargeAsteroid _) = [(x-60, y+60), (x+60, y-60)]
-    mkHitBox (Asteroid (x,y) _ _ Alien _) = [(x-20, y+20), (x+20, y-20)]
-    mkHitBox (Asteroid (x, y) _ _ Destroyed _) = [(x, y), (x, y)]
+    mkHitBox (Asteroid (x,y) _ _ SmallAsteroid _ _) = [(x-15, y+15), (x+15, y-15)]
+    mkHitBox (Asteroid (x,y) _ _ MediumAsteroid _ _) = [(x-35, y+35), (x+35, y-35)]
+    mkHitBox (Asteroid (x,y) _ _ LargeAsteroid _ _) = [(x-55, y+55), (x+55, y-55)]
+    mkHitBox (Asteroid (x,y) _ _ Alien _ _) = [(x-15, y+15), (x+15, y-15)]
+    mkHitBox (Asteroid (x, y) _ _ Destroyed _ _) = [(x, y), (x, y)]
 
 --Makes hitbox for a player
 instance CreateHitBox PlayerInfo where
@@ -39,11 +39,11 @@ checkAsteroidHit a []                      = False
 checkAsteroidHit a (b@(Bullet pos _ _):bs) = isCollision (mkHitBox a) pos || checkAsteroidHit a bs
 
 updateHitAsteroid :: Asteroid -> [Asteroid]
-updateHitAsteroid (Asteroid (x, y) d s LargeAsteroid _) = [Asteroid (x + 3, y + 3) (d + 90) s MediumAsteroid 15, Asteroid (x - 3, y - 3) (d - 90) s MediumAsteroid 15]
-updateHitAsteroid (Asteroid (x, y) d s MediumAsteroid _) = [Asteroid (x + 3, y + 3) (d + 90) s SmallAsteroid 5, Asteroid (x - 3, y - 3) (d - 90) s SmallAsteroid 5]
-updateHitAsteroid (Asteroid pos d s SmallAsteroid _) = [Asteroid pos d s Destroyed 5]
-updateHitAsteroid (Asteroid pos d s Alien _) = [Asteroid pos d s Destroyed 50]
-updateHitAsteroid a@(Asteroid _ _ _ Destroyed _) = [a]
+updateHitAsteroid (Asteroid (x, y) d s LargeAsteroid _ _) = [Asteroid (x, y) d 0 Destroyed 0 0, Asteroid (x + 3, y + 3) (d + 90) s MediumAsteroid 15 0, Asteroid (x - 3, y - 3) (d - 90) s MediumAsteroid 15 0]
+updateHitAsteroid (Asteroid (x, y) d s MediumAsteroid _ _) = [Asteroid (x, y) d 0 Destroyed 0 0, Asteroid (x + 3, y + 3) (d + 90) s SmallAsteroid 5 0, Asteroid (x - 3, y - 3) (d - 90) s SmallAsteroid 5 0]
+updateHitAsteroid (Asteroid pos d s SmallAsteroid _ _) = [Asteroid pos d 0 Destroyed 5 0]
+updateHitAsteroid (Asteroid pos d s Alien _ _) = [Asteroid pos d 0 Destroyed 50 0]
+updateHitAsteroid a@(Asteroid _ _ _ Destroyed _ _) = [a]
 
 updateHitBullet :: Bullet -> Bullet
 updateHitBullet (Bullet pos d _) = Bullet pos d True
@@ -94,5 +94,5 @@ doesTriangleIntersectSquare [(x1,y1), (x2,y2), (x3,y3)] square@[(x1Square,y1Squa
     in edgeIntersection || vertexInSquare || vertexInTriangle
 
 playerCollisions :: PlayerInfo -> [Asteroid] -> PlayerInfo
-playerCollisions p@(PlayerInfo pos _ _ _ Alive score name) as  | any (doesTriangleIntersectSquare (mkHitBox p) . mkHitBox) as = PlayerInfo (0,0) 90 False (False, False) Dead score name
-                                                            | otherwise = p
+playerCollisions p@(PlayerInfo pos _ _ _ Alive score name) as   | any (doesTriangleIntersectSquare (mkHitBox p) . mkHitBox) as = PlayerInfo (0,0) 90 False (False, False) Dead score name
+                                                                | otherwise = p

@@ -16,15 +16,14 @@ import Collision
 import Score
 
 step :: Float -> GameState -> IO GameState
-step secs gs@(GameState _ _ _ _ IsPaused _ _ _) = return gs
-step secs gs@(GameState _ (PlayerInfo _ _ _ _ Dead _ _) _ _ _ _ _ _) = return gs
-step secs (GameState elapsedTime playerInfo asteroids bullets IsNotPaused seed counter scores) = return $ GameState (elapsedTime + secs) (updatePlayer playerInfo) (updateAsteroids asteroids bullets) (updateBullets bullets asteroids) IsNotPaused seed (counter + 1) scores
+step _ gs@(GameState _ (PlayerInfo _ _ _ _ Dead _ _) _ _ Playing _ _ _) = return gs { playingState = GameOver }
+step secs (GameState elapsedTime playerInfo asteroids bullets Playing seed counter scores) = return $ GameState (elapsedTime + secs) (updatePlayer playerInfo) (updateAsteroids asteroids bullets) (updateBullets bullets asteroids) Playing seed (counter + 1) scores
   where
     updatePlayer :: PlayerInfo -> PlayerInfo
     updatePlayer p = movePlayer $ rotatePlayer $ updateScore asteroids $ playerCollisions p asteroids
 
     updateAsteroids :: [Asteroid] -> [Bullet] -> [Asteroid]
-    updateAsteroids as bs = map moveAsteroid $ setAlienDirection (playerPosition playerInfo) $ createAsteroid counter positions directions speeds maxNumAsteroids variant $ deleteAsteroids $ asteroidCollisions as bs
+    updateAsteroids as bs = map moveAsteroid $ setAlienDirection (playerPosition playerInfo) $ createAsteroid counter positions directions speeds maxNumAsteroids variant $ map updateFrameAsteroid $ deleteAsteroids $ asteroidCollisions as bs
       where
         positions = createPositions seed counter (playerPosition playerInfo)
         directions = createDirections seed counter
@@ -36,9 +35,10 @@ step secs (GameState elapsedTime playerInfo asteroids bullets IsNotPaused seed c
 
     updateBullets :: [Bullet] -> [Asteroid] -> [Bullet]
     updateBullets bs as = map moveBullet (deleteBullets (bulletCollisions bs as))
+step secs gs = return gs
 
 input :: Event -> GameState -> IO GameState
-input (EventKey (Char 'p') Down _ _) gstate = return $ gstate { pauseState = if pauseState gstate == IsPaused then IsNotPaused else IsPaused }
+input (EventKey (Char 'p') Down _ _) gstate = return $ gstate { playingState = if playingState gstate == Paused then Playing else Paused }
 
 input (EventKey (SpecialKey KeyUp) Down _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = True } }
 input (EventKey (SpecialKey KeyUp) Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = False } }
@@ -61,15 +61,22 @@ input (EventKey (MouseButton MiddleButton) Down _ _) gstate = return $ gstate { 
 input (EventKey (MouseButton MiddleButton) Up _ _) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isTurning = (False, snd $ isTurning (playerInfo gstate)) } }
 
 
-input (EventKey (Char 'r') Down _ _) gs@(GameState _ player@(PlayerInfo _ _ _ _ dead _ _) _ _ _ _ _ scores) = do
+input (EventKey (Char 'r') Down _ _) gs@(GameState _ player _ _ GameOver _ _ scores) = do
   seed <- randomIO
   return $ initialState seed scores
 
--- right enter key to save game and update highscores
-input (EventKey (SpecialKey KeyEnter) Down _ _) gs@(GameState _ player@(PlayerInfo _ _ _ _ dead _ _) _ _ _ _ _ scores) = do
+input (EventKey (Char c) Down _ _) gs@(GameState _ player _ _ SavingScore _ _ _) = return gs { playerInfo = player { playerName = playerName player ++ [c] } }
+
+input (EventKey (SpecialKey KeyEnter) Down _ _) gs@(GameState _ _ _ _ NotStarted _ _ scores) = return $ gs { playingState = Playing }
+input (EventKey (SpecialKey KeyEnter) Down _ _) gs@(GameState _ _ _ _ GameOver _ _ scores) = return $ gs { playingState = SavingScore }
+input (EventKey (SpecialKey KeyEnter) Down _ _) gs@(GameState _ player _ _ SavingScore _ _ scores) = do
   writeFile "NewScores.txt" (updateHighScores scores player)
   renameFile "NewScores.txt" "HighScores.txt"
-  return gs
+  return $ gs { playingState = HighScores }
+input (EventKey (SpecialKey KeyEnter) Down _ _) gs@(GameState _ _ _ _ HighScores _ _ _) = do
+  scores <- getHighScores
+  seed <- randomIO
+  return $ initialState seed scores
 
 input _ gstate = return gstate
 
@@ -91,7 +98,7 @@ rotatePlayer p = p
 
 updateScore :: [Asteroid] -> PlayerInfo -> PlayerInfo
 updateScore [] p = p
-updateScore ((Asteroid _ _ _ _ plusScore):as) (PlayerInfo p angle m t s score name) = updateScore as (PlayerInfo p angle m t s (score + plusScore) name)
+updateScore ((Asteroid _ _ _ _ plusScore _):as) (PlayerInfo p angle m t s score name) = updateScore as (PlayerInfo p angle m t s (score + plusScore) name)
 
 -- | Get starting position of bullet
 startingPositionBullet :: Bullet -> Bullet
@@ -103,12 +110,12 @@ moveBullet (Bullet (x, y) angle hit) = Bullet (x - (15 * cos (angle * (pi /180))
 
 -- | Move the asteroid
 moveAsteroid :: Asteroid -> Asteroid
-moveAsteroid (Asteroid (x, y) angle speed variant score) =
+moveAsteroid (Asteroid (x, y) angle speed variant score frame) =
   let newX = x - (speed * cos (angle * (pi /180)))
       newY = y + (speed * sin (angle * (pi /180)))
       (newX', newY') = if newX > 400 + variantNumber then (-400 - variantNumber, newY) else if newX < -400 - variantNumber then (400 + variantNumber, newY) else (newX, newY)
       (newX'', newY'') = if newY > 300 + variantNumber then (newX', -300 - variantNumber) else if newY < -300 - variantNumber then (newX', 300 - variantNumber) else (newX', newY')
-  in Asteroid (newX'', newY'') angle speed variant score
+  in Asteroid (newX'', newY'') angle speed variant score frame
     where
       variantNumber = case variant of
         SmallAsteroid -> 20
@@ -123,7 +130,7 @@ createPositions n counter (pX, pY) = if length positionsSet == 25 then positions
     positionsSet = take 25 (filter f [(x, y) | x <- xSet, y <-ySet])
     xSet = getRandomNumbers 500 (-400) 400 n counter
     ySet = getRandomNumbers 500 (-300) 300 n counter
-    f (x, y) = not (x > (pX - 200) && x < (pX + 200) && y > (pY - 200) && y < (pY + 200))
+    f (x, y) = not (x > (pX - 300) && x < (pX + 300) && y > (pY - 300) && y < (pY + 300))
 
 createDirections :: Int -> Int -> [Float]
 createDirections = getRandomNumbers 25 0 360
@@ -165,10 +172,14 @@ getRandomNumbers num lowEnd highEnd n counter = take num (unfoldr (Just .uniform
 createAsteroid :: Int -> [(Float, Float)] -> [Float] -> [Float] -> Int -> [Variant] -> [Asteroid] -> [Asteroid]
 createAsteroid n pos d speeds max vars as | null pos = as
                                     | n >= length pos = createAsteroid (n - length pos) pos d speeds max vars as
-                                    | length as <= max = Asteroid (pos !! n) (d !! n) (speeds !! n) (vars !! n) 0 : as
+                                    | length as <= max = Asteroid (pos !! n) (d !! n) (speeds !! n) (vars !! n) 0 0 : as
                                     | otherwise = as
 
 setAlienDirection :: (Float, Float) -> [Asteroid] -> [Asteroid]
 setAlienDirection _ [] = []
-setAlienDirection (x1, y1) ((Asteroid (x2, y2) d speed Alien s):as) = Asteroid (x2, y2) (((atan2 (x1 - x2) (y1 - y2) * 180) / pi) + 90) speed Alien s : setAlienDirection (x1, y1) as
+setAlienDirection (x1, y1) ((Asteroid (x2, y2) d speed Alien s f):as) = Asteroid (x2, y2) (((atan2 (x1 - x2) (y1 - y2) * 180) / pi) + 90) speed Alien s f: setAlienDirection (x1, y1) as
 setAlienDirection p (a:as) = a : setAlienDirection p as
+
+updateFrameAsteroid :: Asteroid -> Asteroid
+updateFrameAsteroid a@(Asteroid _ _ _ Destroyed _ n) = a{frameCounter = n + 1}
+updateFrameAsteroid a                                = a
