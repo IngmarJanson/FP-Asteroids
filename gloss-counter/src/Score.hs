@@ -1,7 +1,7 @@
 module Score where
 
 import Model
-
+import Graphics.Gloss
 --Gets the highscores from the high scores file
 getHighScores :: IO ScoreList
 getHighScores =  do
@@ -26,3 +26,9 @@ replaceScore (x@[name, score]:xs) (newName, newScore)
 
 scoresToString :: ScoreList -> String
 scoresToString scores = unlines $ map unwords scores
+
+showHighScores :: ScoreList -> Picture
+showHighScores scores = pictures $ zipWith showHighScore scores [1..]
+
+showHighScore :: [String] -> Int -> Picture
+showHighScore [name, score] n = translate (-50) (150 - 50 * fromIntegral n) $ scale 0.2 0.2 $ color white $ text $ name ++ " " ++ show score

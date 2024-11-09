@@ -1,5 +1,5 @@
-BOB 10000
-LIL 5000
-BEN 4000
-AVA 3000
-Ingmar 800
+Pro 10000
+Advanced 5000
+Intermediate 4000
+Beginner 3000
+Noob 800

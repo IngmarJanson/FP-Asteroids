@@ -48,7 +48,7 @@ animateExplosion [p0, p1, p2, p3, p4, p5, p6, p7] (Asteroid (x, y) _ _ Destroyed
 animateExplosion _  _ = Blank
 
 view :: Picture -> Picture -> Picture -> Picture -> Picture -> [Picture] -> GameState -> Picture
-view background playerCircle asteroidBlock alienBlock bulletDot explosions gs@(GameState _ playerInfo asteroids bullets _ _ _ _) = pictures 
+view background playerCircle asteroidBlock alienBlock bulletDot explosions gs@(GameState _ playerInfo asteroids bullets _ _ _ scores) = pictures 
   [
     background
     , showInfo gs
@@ -60,7 +60,7 @@ view background playerCircle asteroidBlock alienBlock bulletDot explosions gs@(G
     , showPauseScreen gs
     , showGameOverScreen gs
     , showSavingScoreScreen gs
-    , showHighScores gs
+    , showHighScoreScreen gs
   ]
 
 showInfo :: GameState -> Picture
@@ -89,11 +89,14 @@ enterNameScreen (PlayerInfo _ _ _ _ _ _ name) = Pictures
         , translate (-25) 0 $ scale 0.2 0.2 $ color white $ text name
     ]   
 
--- show the five highscores
+-- Show black screen with high scores 1 to 5  
 highScoreScreen :: ScoreList -> Picture
-highScoreScreen scores = pictures 
-    [color white $ translate (-100) 0 $ scale 0.3 0.3 $ text "High Scores", 
-    color white $ translate (-100) (-50) $ scale 0.1 0.1 $ text (scoresToString scores)]
+highScoreScreen scores = Pictures 
+    [ 
+        color black $ rectangleSolid 800 600 
+        , translate (-50) 150 $ scale 0.2 0.2 $ color white $ text "High Scores:"
+        , showHighScores scores
+    ]
 
 showStartScreen :: GameState -> Picture
 showStartScreen (GameState _ _ _ _ NotStarted _ _ _) = startScreen
@@ -111,8 +114,8 @@ showPauseScreen :: GameState -> Picture
 showPauseScreen (GameState _ _ _ _ Paused _ _ _) = pauseScreen
 showPauseScreen _ = blank
 
-showHighScores :: GameState -> Picture
-showHighScores (GameState _ _ _ _ HighScores _ _ scores) = highScoreScreen scores
-showHighScores _ = blank
+showHighScoreScreen :: GameState -> Picture
+showHighScoreScreen (GameState _ _ _ _ HighScores _ _ scores) = highScoreScreen scores
+showHighScoreScreen _ = blank
 
 
