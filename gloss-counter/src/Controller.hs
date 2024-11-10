@@ -63,8 +63,11 @@ input (EventKey (SpecialKey KeySpace) Down _ (x, y)) gstate = return $ gstate { 
 input (EventKey (MouseButton LeftButton) Down _ (x, y)) gstate = return $ gstate { bullets = startingPositionBullet (Bullet (playerPosition (playerInfo gstate)) (playerDirection (playerInfo gstate)) False) : bullets gstate }
 
 -- right click mouse button to move
-input (EventKey (MouseButton RightButton) Down _ (x, y)) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = MouseMoving (x, y) } {isTurning = (False, False)} }
+input (EventKey (MouseButton RightButton) Down _ pos) gstate = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = MouseMoving pos } {isTurning = (False, False)} }
 input (EventKey (MouseButton RightButton) Up _ _) gstate        = return $ gstate { playerInfo = (playerInfo gstate) { isMoving = NotMoving } }
+
+-- | Mouse movement
+input (EventMotion (x, y)) gs@(GameState _ player@(PlayerInfo _ _ (MouseMoving _) _ _ _ _) _ _ Playing _ _ _) = return gs { playerInfo = player { isMoving = MouseMoving (x, y) } }
 
 -- | Restart the game
 input (EventKey (Char 'r') Down _ _) gs@(GameState _ player _ _ GameOver _ _ scores) = do

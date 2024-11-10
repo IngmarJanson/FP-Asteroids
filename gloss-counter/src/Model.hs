@@ -20,7 +20,7 @@ data Variant        = Destroyed | SmallAsteroid | MediumAsteroid | LargeAsteroid
 type ScoreList      = [[String]]
 
 --How many lives a player has left
-data Lives          = Three | Two | One | Dead
+data PlayerLives          = Three | Two | One | Dead
     deriving (Show)
 
 --Describing the hit box as a list of points
@@ -51,7 +51,7 @@ data PlayerInfo = PlayerInfo {
                   , playerDirection     :: Float            --The direction of a player in degrees (so from 0 to 360)
                   , isMoving            :: IsMoving         --If a player is moving or not
                   , isTurning           :: (Left, Right)    --If a player is turning and in what direction
-                  , lives               :: Lives            --How many lives a player has left 
+                  , lives               :: PlayerLives            --How many lives a player has left 
                   , playerScore         :: Int              --A players score
                   , playerName          :: String           --The name of a player
 }
