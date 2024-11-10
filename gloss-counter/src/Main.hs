@@ -20,4 +20,7 @@ main = do
   let bulletDot       = color white (circleSolid 2)
   randomNumber        <- randomIO
   scores              <- getHighScores
-  playIO window black 30 (initialState randomNumber scores) (return . view background playerCircle asteroidBlock alienBlock bulletDot s) input step
+  playIO window black fps (initialState randomNumber scores) (return . view background playerCircle asteroidBlock alienBlock bulletDot s) input step
+
+fps :: Int
+fps = 120

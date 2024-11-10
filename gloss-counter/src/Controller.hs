@@ -93,15 +93,15 @@ input _ gstate = return gstate
 -- | Move the player
 movePlayer :: PlayerInfo -> PlayerInfo
 movePlayer (PlayerInfo (x, y) angle Moving isTurning status score name) =
-  let newX              = x - (4 * cos (angle * (pi /180)))
-      newY              = y + (4 * sin (angle * (pi /180)))
+  let newX              = x - (3/2 * cos (angle * (pi /180)))
+      newY              = y + (3/2 * sin (angle * (pi /180)))
       (newX', newY')    = if newX > 425 then (-425, newY) else if newX < -425 then (425, newY) else (newX, newY)
       (newX'', newY'')  = if newY > 325 then (newX', -325) else if newY < -325 then (newX', 325) else (newX', newY')
   in PlayerInfo (newX'', newY'') angle Moving isTurning status score name
 movePlayer (PlayerInfo (x,y) angle (MouseMoving (x', y')) isTurning status score name) =
   let newX              = x - (speed * cos (angle * (pi /180)))
       newY              = y + (speed * sin (angle * (pi /180)))
-      speed             = distance / 45
+      speed             = distance / 180 
       distance          = sqrt((x' - x)^2 + (y' - y)^2)
       (newX', newY')    = if newX > 425 then (-425, newY) else if newX < -425 then (425, newY) else (newX, newY)
       (newX'', newY'')  = if newY > 325 then (newX', -325) else if newY < -325 then (newX', 325) else (newX', newY)
@@ -111,9 +111,9 @@ movePlayer p = p
 
 -- | Rotate the player
 rotatePlayer :: PlayerInfo -> PlayerInfo
-rotatePlayer (PlayerInfo (x, y) angle isMoving (True,False) status score name)                = PlayerInfo (x, y) (angle - 6) isMoving (True,False) status score name
-rotatePlayer (PlayerInfo (x, y) angle isMoving (False,True) status score name)                = PlayerInfo (x, y) (angle + 6) isMoving (False,True) status score name
-rotatePlayer (PlayerInfo (x, y) angle m@(MouseMoving (x',y')) (True,True) status score name)  = PlayerInfo (x, y) newAngle m (True,True) status score name
+rotatePlayer (PlayerInfo (x, y) angle isMoving (True,False) status score name)                = PlayerInfo (x, y) (angle - 2) isMoving (True,False) status score name 
+rotatePlayer (PlayerInfo (x, y) angle isMoving (False,True) status score name)                = PlayerInfo (x, y) (angle + 2) isMoving (False,True) status score name
+rotatePlayer (PlayerInfo (x, y) angle m@(MouseMoving (x',y')) turning status score name)  = PlayerInfo (x, y) newAngle m turning status score name
   where
     newAngle = ((atan2 (x' - x) (y' - y) * 180) / pi) + 90
 rotatePlayer p = p
@@ -129,7 +129,7 @@ startingPositionBullet (Bullet (x, y) angle hit) = Bullet (x - (25 * cos (angle 
 
 -- | Move the bullet
 moveBullet :: Bullet -> Bullet
-moveBullet (Bullet (x, y) angle hit) = Bullet (x - (15 * cos (angle * (pi /180))), y + (15 * sin (angle * (pi /180))) ) angle hit
+moveBullet (Bullet (x, y) angle hit) = Bullet (x - (5 * cos (angle * (pi /180))), y + (5 * sin (angle * (pi /180))) ) angle hit
 
 -- | Move the asteroid
 moveAsteroid :: Asteroid -> Asteroid
@@ -166,17 +166,17 @@ createSpeeds (lowEnd, highEnd)= getRandomNumbers 25 lowEnd highEnd
 
 -- | Speed ranges for the asteroids, the longer the game the faster the asteroids
 getSpeedRange :: Int -> (Float, Float)
-getSpeedRange counter | counter < 1800  = (2, 4)
-                      | counter < 3600  = (2, 5)
-                      | counter < 5400  = (3, 5)
-                      | counter < 7200  = (3, 6)
-                      | counter < 9000  = (4, 6)
-                      | counter < 10800 = (4, 7)
-                      | counter < 12600 = (5, 7)
-                      | counter < 14400 = (5, 8)
-                      | counter < 16200 = (6, 8)
-                      | counter < 18000 = (6, 9)
-                      | otherwise       = (7, 10)
+getSpeedRange counter | counter < 1800  = (2/4, 4/4)
+                      | counter < 3600  = (2/4, 5/4)
+                      | counter < 5400  = (3/4, 5/4)
+                      | counter < 7200  = (3/4, 6/4)
+                      | counter < 9000  = (4/4, 6/4)
+                      | counter < 10800 = (4/4, 7/4)
+                      | counter < 12600 = (5/4, 7/4)
+                      | counter < 14400 = (5/4, 8/4)
+                      | counter < 16200 = (6/4, 8/4)
+                      | counter < 18000 = (6/4, 9/4)
+                      | otherwise       = (7/4, 10/4)
 
 -- | Maximum number of asteroids on the screen, the longer the game the more asteroids
 getMaxNumAsteroids :: Int -> Int
