@@ -27,5 +27,6 @@ replaceScore (x@[name, score]:xs) (newName, newScore)
             | newScore > read score = [newName ++ " " ++ show newScore] : x : xs
             | otherwise             = x : replaceScore xs (newName, newScore)
 
+--Converts the scorelist to a string
 scoresToString :: ScoreList -> String
 scoresToString scores = unlines $ map unwords scores
