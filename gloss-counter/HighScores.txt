@@ -2,4 +2,4 @@ Pro 10000
 Advanced 5000
 Intermediate 4000
 Beginner 3000
-Noob 800
+Noob 1000

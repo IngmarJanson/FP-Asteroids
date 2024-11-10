@@ -12,23 +12,20 @@ getHighScores =  do
 updateTopFiveHighScores :: ScoreList -> (String, Int) -> ScoreList
 updateTopFiveHighScores scores@(x:xs) (newName, newScore) = removeScore (replaceScore scores (newName, newScore))
 
+--Updates the highscore list, the players score will be added if its higher than any of the scores on it
 updateHighScores :: ScoreList -> PlayerInfo -> String
 updateHighScores scores (PlayerInfo _ _ _ _ _ score name) = scoresToString $ updateTopFiveHighScores scores (name, score)
 
+--Removes the last score from the scorelist if the list is longer than five
 removeScore :: ScoreList -> ScoreList
 removeScore scores = if length scores > 5 then init scores else scores
 
+--Replaces a score
 replaceScore :: ScoreList -> (String, Int) -> ScoreList
-replaceScore [] _ = []
+replaceScore [] _                   = []
 replaceScore (x@[name, score]:xs) (newName, newScore)
             | newScore > read score = [newName ++ " " ++ show newScore] : x : xs
-            | otherwise = x : replaceScore xs (newName, newScore)
+            | otherwise             = x : replaceScore xs (newName, newScore)
 
 scoresToString :: ScoreList -> String
 scoresToString scores = unlines $ map unwords scores
-
-showHighScores :: ScoreList -> Picture
-showHighScores scores = pictures $ zipWith showHighScore scores [1..]
-
-showHighScore :: [String] -> Int -> Picture
-showHighScore [name, score] n = translate (-50) (150 - 50 * fromIntegral n) $ scale 0.2 0.2 $ color white $ text $ name ++ " " ++ show score
