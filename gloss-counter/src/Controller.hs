@@ -169,26 +169,26 @@ createSpeeds (lowEnd, highEnd)= getRandomNumbers 25 lowEnd highEnd
 
 -- | Speed ranges for the asteroids, the longer the game the faster the asteroids
 getSpeedRange :: Int -> (Float, Float)
-getSpeedRange counter | counter < 1800  = (2/4, 4/4)
-                      | counter < 3600  = (2/4, 5/4)
-                      | counter < 5400  = (3/4, 5/4)
-                      | counter < 7200  = (3/4, 6/4)
-                      | counter < 9000  = (4/4, 6/4)
-                      | counter < 10800 = (4/4, 7/4)
-                      | counter < 12600 = (5/4, 7/4)
-                      | counter < 14400 = (5/4, 8/4)
-                      | counter < 16200 = (6/4, 8/4)
-                      | counter < 18000 = (6/4, 9/4)
-                      | otherwise       = (7/4, 10/4)
+getSpeedRange counter | counter < 7200   = (0.5, 1.0)
+            | counter           < 14400  = (0.5, 1.25)
+            | counter           < 21600  = (0.75, 1.25)
+            | counter           < 28800  = (0.75, 1.5)
+            | counter           < 36000  = (1.0, 1.5)
+            | counter           < 43200  = (1.0, 1.75)
+            | counter           < 50400  = (1.25, 1.75)
+            | counter           < 57600  = (1.25, 2.0)
+            | counter           < 64800  = (1.5, 2.0)
+            | counter           < 72000  = (1.5, 2.25)
+            | otherwise                  = (1.75, 2.5)
 
 -- | Maximum number of asteroids on the screen, the longer the game the more asteroids
 getMaxNumAsteroids :: Int -> Int
-getMaxNumAsteroids counter | counter < 1800  = 5
-                           | counter < 3600  = 6
-                           | counter < 7200  = 7
-                           | counter < 10800 = 8
-                           | counter < 14400 = 9
-                           | otherwise       = 10
+getMaxNumAsteroids counter  | counter < 7200   = 5
+                            | counter < 14400  = 6
+                            | counter < 28800  = 7
+                            | counter < 43200  = 8
+                            | counter < 57600  = 9
+                            | otherwise        = 10
 
 -- | Create random variants of the asteroids
 createVariants :: (Float, Float) -> Int -> Int -> [Variant]
@@ -196,9 +196,9 @@ createVariants (lowEnd, highEnd) n counter = map (toEnum . round) $ getRandomNum
 
 -- | Variant ranges for the asteroids, the longer the game the more variants
 getVariantRange :: Int -> (Float, Float)
-getVariantRange counter | counter < 900  = (1, 3)
-                        | counter < 3600 = (1, 4)
-                        | counter < 9000 = (2, 4)
+getVariantRange counter | counter < 2800  = (1, 3)
+                        | counter < 12400 = (1, 4)
+                        | counter < 28000 = (2, 4)
                         | otherwise      = (3, 4)
 
 -- | Get random numbers
